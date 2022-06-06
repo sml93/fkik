@@ -3,16 +3,15 @@ import numpy as np
 import casadi as cs
 
 from casadi import *
-from solve import solve
 from numpy import array
 from scipy import linalg as lin
 from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 
 
-class findPOC(self, ang, t, ht):
+class findPOC():
   "Getting POC params"
-  def __init__(self):
+  def __init__(self, ang, t, ht):
     self.vel_out = 146    # m/s
     self.m = 0.0005
     self.g = 9.81
