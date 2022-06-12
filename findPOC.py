@@ -51,11 +51,12 @@ class findPOC():
 
     "Getting all values for z and multiplying by -1"
     vz1 = solz[:, 0]*-1
-    z = solz[:, 1]
+    z = solz[:, 1]*-1
     return x, z, vx1, vz1
 
   def getPOC(self, ang, t, ht):
     "Getting POC params"
+    ht = ht*-1
     model = self.solve(self.modelx, self.modelz, ang)
     
     x = model[0]
