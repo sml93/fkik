@@ -4,22 +4,23 @@ import numpy as np
 import casadi as cs
 
 from casadi import *
-from findPOC import findPOC
 from numpy import angle, array
 from scipy import linalg as lin
 from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 
+from findPOC import findPOC
+
 
 class kinematics():
-  def setUp(self):
-    super(kinematics, self).setUp()
-    self.init_hyperparameters()
+  # def setUp(self):
+  #   super(kinematics, self).setUp()
+  #   self.init_hyperparameters()
 
-  def tearDown(self):
-    super(kinematics, self).tearDown()
+  # def tearDown(self):
+  #   super(kinematics, self).tearDown()
 
-  def init_hyperparameters(self, angle, t, ht_shel):
+  def __init__(self, angle, t, ht_shel, deb_x, deb_y):
     self.ybs = np.deg2rad(73.333)
     self.lbs = 0.052276
     self.lsn = 0.12
@@ -27,8 +28,8 @@ class kinematics():
     # self.vel_out = 146    # m/s
     self.g = 9.81
     # self.m = 0.0005
-    self.deb_x = 0
-    self.deb_y = 0
+    self.deb_x = deb_x
+    self.deb_y = deb_y
     self.ht_shel = ht_shel
     self.angle = angle
     self.t = t
@@ -41,7 +42,7 @@ class kinematics():
     self.psi_ob = np.arctan(self.deb_y/self.deb_x)
     self.theta_b = np.deg2rad(0)
 
-  def homotrans_ob(self, gamma_ob, psi_ob, lob):
+  def transform_ob(self, gamma_ob, psi_ob, lob):
     hob = [[np.cos(psi_ob), np.sin(psi_ob), 0, lob * np.cos(gamma_ob) * np.cos(psi_ob)],
             [np.sin(psi_ob), np.cos(psi_ob), 0, lob * np.cos(gamma_ob) * np.sin(psi_ob)],
             [0, 0, 1, lob * np.sin(gamma_ob) * np.cos(psi_ob)],
@@ -53,7 +54,7 @@ class kinematics():
     # print(p_o)
     return p_o[0], p_o[1], p_o[2]
 
-  def homotrans_bs(self, theta, gamma_ob, psi_ob, lob):
+  def transform_bs(self, theta, gamma_ob, psi_ob, lob):
       hbs = [[np.cos(theta), 0, np.sin(theta), self.lbs*np.cos(self.ybs)*np.cos(theta)],
               [0, 1, 0, lob*np.cos(gamma_ob)*np.sin(psi_ob)],
               [-np.sin(theta), 0, np.cos(theta), self.lbs*np.sin(self.ybs)*np.cos(theta)],
@@ -64,7 +65,7 @@ class kinematics():
 
       return p_b[0], p_b[1], p_b[2]
 
-  def homotrans_sn(self, theta, alpha_p, gamma_ob, psi_ob, lob):
+  def transform_sn(self, theta, alpha_p, gamma_ob, psi_ob, lob):
       if alpha_p == 0:
           hsn = [[np.cos(theta), 0, np.sin(theta), self.lsn*np.cos((alpha_p-theta)-np.pi/2)*np.cos(theta)],
                   [0, 1, 0, lob * np.cos(gamma_ob) * np.sin(psi_ob)],
@@ -82,9 +83,9 @@ class kinematics():
 
   def fk(self, y_ob, alpha_p, l_ob):
     "Getting the FK of the system, getting xob/yob/zob values"
-    pos_ob = self.homotrans_ob(y_ob, self.psi_ob, l_ob)
-    pos_bs = self.homotrans_bs(self.theta_b, y_ob, self.psi_ob, l_ob)
-    pos_sn = self.homotrans_sn(self.theta_b, alpha_p, y_ob, self.psi_ob, l_ob)
+    pos_ob = self.transform_ob(y_ob, self.psi_ob, l_ob)
+    pos_bs = self.transform_bs(self.theta_b, y_ob, self.psi_ob, l_ob)
+    pos_sn = self.transform_sn(self.theta_b, alpha_p, y_ob, self.psi_ob, l_ob)
 
     "X params"
     x_ob = pos_ob[0][0]   # 7
@@ -109,6 +110,7 @@ class kinematics():
     
     height = z_ob - (z_bs + z_sn + self.ht_shel)
     poc = findPOC(alpha_p-self.theta_b, self.t, self.ht_shel)
+    poc = poc.getPOC(alpha_p-self.theta_b, self.t, self.ht_shel)
     x_water = poc[3]      # 6
     z_water = poc[4]      # 7
 
