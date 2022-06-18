@@ -10,14 +10,14 @@ from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from hybrid_kinematics import kinematics
+from hybrid_kinematics_force import kinematics_force
 
 
 def close_event():
   plt.close()
 
 def main(ang, t, ht_shel, deb_x, deb_y):
-  run = kinematics(ang, t, ht_shel, deb_x, deb_y)
+  run = kinematics_force(ang, t, ht_shel, deb_x, deb_y)
   link = run.fk(np.deg2rad(57.0), ang, 5.0)
 
   xcoords = [0, link[0], link[0] + link[1], link[0] + link[1] + link[2]]

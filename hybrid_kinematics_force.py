@@ -12,13 +12,13 @@ from matplotlib import pyplot as plt
 from findPOC import findPOC
 
 
-class kinematics():
+class kinematics_force():
   def setUp(self):
-    super(kinematics, self).setUp()
+    super(kinematics_force, self).setUp()
     self.init_hyperparameters()
 
   def tearDown(self):
-    super(kinematics, self).tearDown()
+    super(kinematics_force, self).tearDown()
 
   def __init__(self, angle, t, ht_shel, deb_x, deb_y):
     self.ybs = np.deg2rad(73.333)
@@ -174,7 +174,7 @@ class kinematics():
   def ik(self, ht, deb_x, deb_y, deb_z, vel_out):
     "Getting IK of system"
     self.vel_out = vel_out           # setting vel_out
-    x = SX.sym('x'); y = SX.sym('y'); z = SX.sym('z'); p = SX.sym('p'); 
+    x = SX.sym('x'); y = SX.sym('y'); z = SX.sym('z'); p = SX.sym('p'); d = SX.sym('d'); # to include dso or force as a limiting constraint
 
     "Defining objective function variables"
     zpoc = deb_z
@@ -195,6 +195,9 @@ class kinematics():
     xsn = self.lsn*cos(y)*cos(self.theta_b)
     xwater = xpoc - (xob + xbs + xsn)
 
+    # standoff distance that takes into account of the 3d vector of the traj of the water
+    d = np.sqrt(np.power(xwater,2) + np.power(ywater,2) + np.power(zwater,2))
+
     "Defining weights"
     q = 1.0         #0.6   #0.2     #increasing q, decreases xob, increases alpha_prime      #0.9
     r = 1.0         #1.2   #0.6     #increasing r, decrease xob, decreases alpha_prime       #0.162
@@ -202,7 +205,8 @@ class kinematics():
     o = 1.0
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
-    obj = q*zwater + o*ywater + r*xwater + s*z
+    # obj = q*zwater + r*ywater + s*xwater + o*z + d
+    obj = o*z + q*d
 
     ineq = cs.vertcat(
                       (z*sin(x)),       #constrains the UAV altitude
@@ -216,7 +220,7 @@ class kinematics():
     opts = {'ipopt.max_iter': 2000, 'ipopt.acceptable_tol': 1e-20}
     S = nlpsol('S', 'ipopt', nlp, opts)
 
-    initial_guess = [1, 0.0174532, 5, 0.174532]
+    initial_guess = [1, 0.0174532, 5, 0.174532, 1.5]
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
     # lower_bound = [0.0, deb_x/4, 0.01, ht, deb_x-0.1, deb_z, 0.0, 0.0]

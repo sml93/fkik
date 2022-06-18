@@ -10,4 +10,14 @@ To work on refreshing fkik3D_single.py to allow for better fkik as a framework i
 The recent commit is corrected for optimizing over a range of deb_x and deb_y continuously.  
   
 To insert the function for IK and FKIK in subsequently.  
-  
+
+
+18 Jun 22  
+Adding an edition for hkf:  
+ - hybrid_kinematics_force.py  
+ - main_hkf.py  
+
+TO EDIT:  
+Function for IK in hybrid_kinematics_force.py is edited for the inclusion for standoff distance, d_so. (line 177)  
+However, to look into the expression. (line 209)  
+Figure out an equation that relates angles and distances to forces.  
