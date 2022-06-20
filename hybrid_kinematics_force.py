@@ -24,6 +24,8 @@ class kinematics_force():
     self.ybs = np.deg2rad(73.333)
     self.lbs = 0.052276
     self.lsn = 0.12
+    self.density = 995.65
+    self.Aroi = 0.001
 
     # self.vel_out = 146    # m/s
     self.g = 9.81
@@ -40,7 +42,7 @@ class kinematics_force():
     # self.c = self.C*(np.power(self.D,2))
 
     self.psi_ob = np.arctan(self.deb_y/self.deb_x)
-    self.theta_b = np.deg2rad(0)
+    self.theta_b = np.deg2rad(20)
 
   def transform_ob(self, gamma_ob, psi_ob, lob):
     hob = [[np.cos(psi_ob), np.sin(psi_ob), 0, lob * np.cos(gamma_ob) * np.cos(psi_ob)],
@@ -174,13 +176,13 @@ class kinematics_force():
   def ik(self, ht, deb_x, deb_y, deb_z, vel_out):
     "Getting IK of system"
     self.vel_out = vel_out           # setting vel_out
-    x = SX.sym('x'); y = SX.sym('y'); z = SX.sym('z'); p = SX.sym('p'); d = SX.sym('d'); # to include dso or force as a limiting constraint
+    x = SX.sym('x'); y = SX.sym('y'); z = SX.sym('z'); p = SX.sym('p'); # to include dso or force as a limiting constraint
 
     "Defining objective function variables"
     zpoc = deb_z
     zob = z*sin(x)*cos(p)
     zbs = self.lbs*sin(self.ybs)*cos(self.theta_b)
-    zsn = self.lsn*sin(pi/2-y)*cos(self.theta_b)
+    zsn = self.lsn*sin(np.pi/2-y)*cos(self.theta_b)
     zwater = zob - (zbs + zsn + zpoc)
 
     ypoc = deb_y
@@ -198,6 +200,8 @@ class kinematics_force():
     # standoff distance that takes into account of the 3d vector of the traj of the water
     d = np.sqrt(np.power(xwater,2) + np.power(ywater,2) + np.power(zwater,2))
 
+    fpoc = (self.density*d*self.Aroi)/cos(y)
+
     "Defining weights"
     q = 1.0         #0.6   #0.2     #increasing q, decreases xob, increases alpha_prime      #0.9
     r = 1.0         #1.2   #0.6     #increasing r, decrease xob, decreases alpha_prime       #0.162
@@ -205,14 +209,14 @@ class kinematics_force():
     o = 1.0
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
-    # obj = q*zwater + r*ywater + s*xwater + o*z + d
-    obj = o*z + q*d
+    # obj = q*zwater + r*ywater + s*xwater + o*z
+    obj = z + d - fpoc
 
     ineq = cs.vertcat(
                       (z*sin(x)),       #constrains the UAV altitude
                       xob,              #constrains the UAV xposition
                       x,                #constrains the UAV y_ob
-                      y,                #constrains nozzle angle
+                      y,                #constrains nozzle angle, alpha_prime
                       yob,              #constrains the UAV yposition
                       )
 
@@ -220,7 +224,7 @@ class kinematics_force():
     opts = {'ipopt.max_iter': 2000, 'ipopt.acceptable_tol': 1e-20}
     S = nlpsol('S', 'ipopt', nlp, opts)
 
-    initial_guess = [1, 0.0174532, 5, 0.174532, 1.5]
+    initial_guess = [1, 0.0174532, 5, 0.174532]
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
     # lower_bound = [0.0, deb_x/4, 0.01, ht, deb_x-0.1, deb_z, 0.0, 0.0]

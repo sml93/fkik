@@ -33,7 +33,7 @@ def main(ang, t, ht_shel, deb_x, deb_y):
   z_val = [0, link[3], link[3] - link[4], link[3] - link[4] - link[5], link[3] - link[4] - link[5] - link[7]]
 
   fig = plt.figure()
-  timer = fig.canvas.new_timer(interval=1000)
+  timer = fig.canvas.new_timer(interval=int)
   timer.add_callback(close_event)
   ax = fig.gca(projection='3d')
   ax.scatter3D(0, 0, 0, cmap='Greens', c='r')
@@ -69,7 +69,7 @@ def main(ang, t, ht_shel, deb_x, deb_y):
   zIK_val = [0, link[3], link[3] - link[4], link[3] - link[4] - link[5], link[3] - link[4] - link[5] - link[7]]
 
   fig = plt.figure()
-  timer = fig.canvas.new_timer(interval=1000)
+  timer = fig.canvas.new_timer(interval=int)
   timer.add_callback(close_event)
   ax = fig.gca(projection='3d')
   ax.scatter3D(0, 0, 0, cmap='Greens', c='k')
@@ -86,6 +86,7 @@ def main(ang, t, ht_shel, deb_x, deb_y):
 
 
 if __name__ == "__main__":
+  int = 5000
   t = np.linspace(0,5,1000)
 
   """ Once """
