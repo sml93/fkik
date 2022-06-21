@@ -10,6 +10,7 @@ from scipy.integrate import odeint
 from matplotlib import pyplot as plt
 
 from findPOC import findPOC
+from Aroi import getAroi
 
 
 class kinematics_force():
@@ -25,7 +26,7 @@ class kinematics_force():
     self.lbs = 0.052276
     self.lsn = 0.12
     self.density = 995.65
-    self.Aroi = 0.001
+    self.Aroi = float(getAroi()[1.5]['0'])
 
     # self.vel_out = 146    # m/s
     self.g = 9.81
@@ -135,7 +136,7 @@ class kinematics_force():
     x_bs = self.lbs*np.cos(self.ybs)*np.cos(self.theta_b)            # 8
     print("x_bs: ", x_bs)
     x_sn = self.lsn*np.cos(alpha_p-np.pi/2)*np.cos(self.theta_b)     # 9
-    print(x_sn)
+    print("x_sn: ", x_sn)
 
     "Y params"
     y_ob = pos_body[1][0]
@@ -210,15 +211,15 @@ class kinematics_force():
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
     # obj = q*zwater + r*ywater + s*xwater + o*z
-    obj = z + d - fpoc
+    obj = y + z -fpoc
 
     ineq = cs.vertcat(
-                      (z*sin(x)),       #constrains the UAV altitude
-                      xob,              #constrains the UAV xposition
+                      z*sin(x),         #constrains the UAV altitude
+                      xob,              #constrains the UAV xpoc
                       x,                #constrains the UAV y_ob
                       y,                #constrains nozzle angle, alpha_prime
-                      yob,              #constrains the UAV yposition
-                      )
+                      yob,              #constrains the UAV ypoc
+                     )
 
     nlp = {'x': vertcat(x, y, z, p), 'f': obj, 'g': ineq}
     opts = {'ipopt.max_iter': 2000, 'ipopt.acceptable_tol': 1e-20}
@@ -231,8 +232,12 @@ class kinematics_force():
     # upper_bound = [0.0, deb_x/2, 45*3.1415926/180, 10.0, deb_x+0.1, deb_z, 0.1, 0.1]
     # lower_bound = [1.4, 0, 1*3.1415926/180, ht-0.1, deb_x-0.1, deb_z-0.1, 0.0, 0.0]
     # upper_bound = [1.5, deb_z, 45*3.1415926/180, 1.5*ht, deb_x, deb_z, 0.1, 0.1]
-    lower_bound = [ht, deb_x-0.1, np.deg2rad(50), np.deg2rad(-20), deb_y]
+
+    lower_bound = [ht, deb_x-0.1, np.deg2rad(10), np.deg2rad(0), deb_y-0.1]
     upper_bound = [ht, deb_x-0.1, np.deg2rad(90), np.deg2rad(20), deb_y]
+
+    # lower_bound = [ht, np.deg2rad(10), np.deg2rad(0), deb_y]
+    # upper_bound = [ht, np.deg2rad(90), np.deg2rad(70), deb_y]
     sol = S(x0=initial_guess, lbg=lower_bound, ubg=upper_bound)
     sol_opt = sol['x']
 

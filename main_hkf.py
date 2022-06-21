@@ -86,7 +86,7 @@ def main(ang, t, ht_shel, deb_x, deb_y):
 
 
 if __name__ == "__main__":
-  int = 5000
+  int = 8000
   t = np.linspace(0,5,1000)
 
   """ Once """
