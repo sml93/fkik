@@ -43,7 +43,7 @@ class kinematics_force():
     # self.c = self.C*(np.power(self.D,2))
 
     self.psi_ob = np.arctan(self.deb_y/self.deb_x)
-    self.theta_b = np.deg2rad(20)
+    self.theta_b = np.deg2rad(0)
 
   def transform_ob(self, gamma_ob, psi_ob, lob):
     hob = [[np.cos(psi_ob), np.sin(psi_ob), 0, lob * np.cos(gamma_ob) * np.cos(psi_ob)],
@@ -122,6 +122,7 @@ class kinematics_force():
     z_poc = z_ob - (z_bs + z_sn + z_water)  # 9
 
     return x_ob, x_bs, x_sn, z_ob, z_bs, z_sn, x_water, z_water, x_poc, z_poc, y_ob, y_bs, y_sn, y_poc
+            #0     #1    #2    #3    #4    #5      #6       #7      #8     #9    #10   #11   #12   #13
 
 
   def fkik(self, y_ob, alpha_p, l_ob, psi_ob):
@@ -203,41 +204,43 @@ class kinematics_force():
 
     fpoc = (self.density*d*self.Aroi)/cos(y)
 
-    "Defining weights"
-    q = 1.0         #0.6   #0.2     #increasing q, decreases xob, increases alpha_prime      #0.9
-    r = 1.0         #1.2   #0.6     #increasing r, decrease xob, decreases alpha_prime       #0.162
-    s = 1.0         #0.8   #0.11    #decreasing s, increases xpoc                            #0.132
-    o = 1.0
+    # "Defining weights"
+    # q = 1.0         #0.6   #0.2     #increasing q, decreases xob, increases alpha_prime      #0.9
+    # r = 1.0         #1.2   #0.6     #increasing r, decrease xob, decreases alpha_prime       #0.162
+    # s = 1.0         #0.8   #0.11    #decreasing s, increases xpoc                            #0.132
+    # o = 1.0
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
     # obj = q*zwater + r*ywater + s*xwater + o*z
-    obj = y + z -fpoc
+    obj = z + fpoc
+
+    # ineq = cs.vertcat(
+    #                   z*sin(x),         #constrains the UAV altitude
+    #                   xob,              #constrains the UAV xpoc
+    #                   x,                #constrains the UAV y_ob
+    #                   y,                #constrains nozzle angle, alpha_prime
+    #                   yob,              #constrains the UAV ypoc
+    #                  )
 
     ineq = cs.vertcat(
-                      z*sin(x),         #constrains the UAV altitude
-                      xob,              #constrains the UAV xpoc
-                      x,                #constrains the UAV y_ob
-                      y,                #constrains nozzle angle, alpha_prime
-                      yob,              #constrains the UAV ypoc
-                     )
+                  xwater,         #constrains the UAV xpoc
+                  ywater,              #constrains the UAV ypoc
+                  zwater,                #constrains the UAV zwater
+                  y,                #constrains nozzle angle, alpha_prime
+                  )
 
     nlp = {'x': vertcat(x, y, z, p), 'f': obj, 'g': ineq}
-    opts = {'ipopt.max_iter': 2000, 'ipopt.acceptable_tol': 1e-20}
+    opts = {'ipopt.max_iter': 10000, 'ipopt.acceptable_tol': 1e-20}
     S = nlpsol('S', 'ipopt', nlp, opts)
 
     initial_guess = [1, 0.0174532, 5, 0.174532]
 
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
-    # lower_bound = [0.0, deb_x/4, 0.01, ht, deb_x-0.1, deb_z, 0.0, 0.0]
-    # upper_bound = [0.0, deb_x/2, 45*3.1415926/180, 10.0, deb_x+0.1, deb_z, 0.1, 0.1]
-    # lower_bound = [1.4, 0, 1*3.1415926/180, ht-0.1, deb_x-0.1, deb_z-0.1, 0.0, 0.0]
-    # upper_bound = [1.5, deb_z, 45*3.1415926/180, 1.5*ht, deb_x, deb_z, 0.1, 0.1]
+    # lower_bound = [ht, deb_x-0.1, np.deg2rad(10), np.deg2rad(0), deb_y-0.1]
+    # upper_bound = [ht, deb_x-0.1, np.deg2rad(90), np.deg2rad(20), deb_y]
+    lower_bound = [0, deb_y,     1, self.angle]
+    upper_bound = [2, deb_y+0.1, 3, np.deg2rad(70)]
 
-    lower_bound = [ht, deb_x-0.1, np.deg2rad(10), np.deg2rad(0), deb_y-0.1]
-    upper_bound = [ht, deb_x-0.1, np.deg2rad(90), np.deg2rad(20), deb_y]
-
-    # lower_bound = [ht, np.deg2rad(10), np.deg2rad(0), deb_y]
-    # upper_bound = [ht, np.deg2rad(90), np.deg2rad(70), deb_y]
     sol = S(x0=initial_guess, lbg=lower_bound, ubg=upper_bound)
     sol_opt = sol['x']
 
