@@ -238,8 +238,8 @@ class kinematics_force():
     "x = y_ob, y = alpha_p, z = l_ob, p = psi_ob"
     # lower_bound = [ht, deb_x-0.1, np.deg2rad(10), np.deg2rad(0), deb_y-0.1]
     # upper_bound = [ht, deb_x-0.1, np.deg2rad(90), np.deg2rad(20), deb_y]
-    lower_bound = [0, deb_y,     1, self.angle]
-    upper_bound = [2, deb_y+0.1, 3, np.deg2rad(70)]
+    lower_bound = [0, deb_y,     1, self.angle]       # lower bound of nozzle angle is user defined
+    upper_bound = [2, deb_y+0.1, 3, np.deg2rad(70)]   # upp bound of nozzel angle is max UAV can rotate to
 
     sol = S(x0=initial_guess, lbg=lower_bound, ubg=upper_bound)
     sol_opt = sol['x']
@@ -252,8 +252,6 @@ class kinematics_force():
     print('sol_opt:', sol_opt)
     print('yob: %f' % np.rad2deg(x), 'alp_prime: %f' % np.rad2deg(y), 'lob: %f' % z,
           'psi: %f' % np.rad2deg(p))
-    # print('yob: %f' % (x*180/3.1415926), 'alp_prime: %f' % (y*180/3.1415926), 'lob: %f' % z,
-    #       'psi: %f' % (p*180/3.1415926))
     print('ik error func: ', sol['f'])
 
     return x, y, z, p

@@ -17,7 +17,18 @@ Adding an edition for hkf:
  - hybrid_kinematics_force.py  
  - main_hkf.py  
 
-TO EDIT:  
+22 Jun 22:  
 Function for IK in hybrid_kinematics_force.py is edited for the inclusion for standoff distance, d_so. (line 177)  
 However, to look into the expression. (line 209)  
 Figure out an equation that relates angles and distances to forces.  
+
+Fixed:  
+updated objective function to optimize altitude and the trajectory of the water.
+ - as this affects the force at the POC in a whole.  
+
+updated constraints and bounds to:  
+ - nozzle angle, x/y/z-water with their respective bounds.  
+
+
+TODO:  
+Look into pub/sub position to ros so that this will enable easy sharing of data, and potentially as position reference.  
