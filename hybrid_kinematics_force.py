@@ -179,6 +179,7 @@ class kinematics_force():
     "Getting IK of system"
     self.vel_out = vel_out           # setting vel_out
     x = SX.sym('x'); y = SX.sym('y'); z = SX.sym('z'); p = SX.sym('p'); # to include dso or force as a limiting constraint
+        # y_ob          #alpha            #lob             #psi_ob
 
     "Defining objective function variables"
     zpoc = deb_z
@@ -223,9 +224,9 @@ class kinematics_force():
     #                  )
 
     ineq = cs.vertcat(
-                  xwater,         #constrains the UAV xpoc
-                  ywater,              #constrains the UAV ypoc
-                  zwater,                #constrains the UAV zwater
+                  xwater,           #constrains the UAV xpoc
+                  ywater,           #constrains the UAV ypoc
+                  zwater,           #constrains the UAV zwater
                   y,                #constrains nozzle angle, alpha_prime
                   )
 
